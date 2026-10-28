@@ -28,3 +28,7 @@ LEARNING_RATE = 1e-3
 WEIGHT_DECAY = 1e-5
 MAX_EPOCHS = 50
 PATIENCE = 5           # early stopping: stop after 5 epochs with no val improvement
+# Machine-ID classifier settings
+MACHINE_IDS = ["00", "02", "04", "06"]
+DROPOUT = 0.3
+CLF_MAX_EPOCHS = 30
