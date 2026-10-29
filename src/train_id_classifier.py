@@ -1,3 +1,4 @@
+import argparse
 import time
 import numpy as np
 import pandas as pd
@@ -47,8 +48,14 @@ def run_epoch(model, loader, loss_fn, optimizer=None):
 
 
 def main():
-    torch.manual_seed(RANDOM_SEED)
-    np.random.seed(RANDOM_SEED)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--seed", type=int, default=RANDOM_SEED)
+    seed = parser.parse_args().seed
+    tag = "" if seed == RANDOM_SEED else f"_seed{seed}"  # seed 42 keeps original file names
+    print(f"Random seed: {seed}")
+
+    torch.manual_seed(seed)
+    np.random.seed(seed)
     for d in (MODELS_DIR, METRICS_DIR, FIGURES_DIR):
         d.mkdir(parents=True, exist_ok=True)
 
@@ -79,7 +86,7 @@ def main():
                f"val loss {va_loss:.4f} acc {va_acc:.3f} | {time.time() - t0:.0f}s")
         if va_loss < best_val:
             best_val, bad_epochs = va_loss, 0
-            torch.save({"state_dict": model.state_dict()}, MODELS_DIR / "id_classifier.pt")
+            torch.save({"state_dict": model.state_dict()}, MODELS_DIR / f"id_classifier{tag}.pt")
             msg += "  <- best, saved"
         else:
             bad_epochs += 1
@@ -89,14 +96,14 @@ def main():
             break
 
     hist = pd.DataFrame(history)
-    hist.to_csv(METRICS_DIR / "id_clf_training_history.csv", index=False)
+    hist.to_csv(METRICS_DIR / f"id_clf_training_history{tag}.csv", index=False)
     fig, ax = plt.subplots(1, 2, figsize=(12, 4.5))
     ax[0].plot(hist.epoch, hist.train_loss, label="Train"); ax[0].plot(hist.epoch, hist.val_loss, label="Validation")
-    ax[0].set_title("Loss (cross-entropy)"); ax[0].set_xlabel("Epoch"); ax[0].legend(); ax[0].grid(alpha=0.3)
+    ax[0].set_title(f"Loss (cross-entropy), seed {seed}"); ax[0].set_xlabel("Epoch"); ax[0].legend(); ax[0].grid(alpha=0.3)
     ax[1].plot(hist.epoch, hist.train_acc, label="Train"); ax[1].plot(hist.epoch, hist.val_acc, label="Validation")
-    ax[1].set_title("Machine-ID accuracy"); ax[1].set_xlabel("Epoch"); ax[1].legend(); ax[1].grid(alpha=0.3)
+    ax[1].set_title(f"Machine-ID accuracy, seed {seed}"); ax[1].set_xlabel("Epoch"); ax[1].legend(); ax[1].grid(alpha=0.3)
     plt.tight_layout()
-    plt.savefig(FIGURES_DIR / "id_clf_training_curves.png", dpi=150)
+    plt.savefig(FIGURES_DIR / f"id_clf_training_curves{tag}.png", dpi=150)
     print(f"Best val loss: {best_val:.4f}. Model and curves saved.")
 
 
